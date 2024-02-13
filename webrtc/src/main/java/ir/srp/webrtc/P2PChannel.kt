@@ -61,10 +61,7 @@ class P2PChannel private constructor(
             private val signalingServerUrl: String,
             private val username: String,
             private val target: String,
-            private val iceServers: List<IceServer> = listOf(
-                PeerConnection.IceServer.builder("turn:openrelay.metered.ca:443?transport=tcp")
-                    .setUsername("openrelayproject").setPassword("openrelayproject").createIceServer()
-            ),
+            private val iceServers: List<IceServer>,
         ) {
 
             private var mOptions = getDefaultInitializationOptions()
