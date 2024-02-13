@@ -37,7 +37,6 @@ class P2PChannel private constructor(
     private var iceServers: List<IceServer>,
     private var mediaConstraints: MediaConstraints,
     private var username: String,
-    private var target: String,
     private var eventsListener: ChannelEventsListener?,
 ) {
 
@@ -51,6 +50,7 @@ class P2PChannel private constructor(
     private lateinit var signalingServerConnection: WebSocketClient
     private lateinit var signalingServerListener: WebSocketListener
     private var dataChannel: DataChannel? = null
+    private var target: String? = null
     private var doHandshake: Boolean = false
     private var isChannelReady: Boolean = false
 
@@ -60,7 +60,6 @@ class P2PChannel private constructor(
             private val context: Application,
             private val signalingServerUrl: String,
             private val username: String,
-            private val target: String,
             private val iceServers: List<IceServer>,
         ) {
 
@@ -130,7 +129,6 @@ class P2PChannel private constructor(
                     iceServers,
                     mMediaConstraints,
                     username,
-                    target,
                     mEventsListener
                 )
 
@@ -173,6 +171,7 @@ class P2PChannel private constructor(
         peerConnectionObserver = PeerConnectionObserver(
             onProvideDataChannel = { dataChannel ->
                 this.dataChannel = dataChannel
+                doHandshake = true
                 eventsListener?.onCreateP2PChannel()
                 isChannelReady = true
             },
@@ -237,6 +236,7 @@ class P2PChannel private constructor(
     private fun processReceivedSignalingMessage(message: DataModel) {
         when (message.type) {
             DataType.StartConnection -> {
+                this.target = message.username
                 call(target = message.username)
             }
 
@@ -301,7 +301,9 @@ class P2PChannel private constructor(
     }
 
 
-    fun handshake() {
+    fun handshake(target: String) {
+        this.target = target
+
         signalingServerConnection.sendData(
             DataModel(
                 type = DataType.StartConnection,
