@@ -37,4 +37,16 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
+
+    // WebRTC
+    val webrtc_version = "1.0.23995"
+    implementation("org.webrtc:google-webrtc:$webrtc_version")
+
+    // okhttp3
+    val okhttp3_version = "4.12.0"
+    implementation("com.squareup.okhttp3:okhttp:$okhttp3_version")
+
+    // Gson
+    val gson_version = "2.10.1"
+    implementation("com.google.code.gson:gson:$gson_version")
 }
