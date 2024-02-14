@@ -15,6 +15,7 @@ import ir.srp.webrtc.observers.PeerConnectionObserver
 import ir.srp.webrtc.observers.CallSdpObserver
 import ir.srp.webrtc.observers.PeerSdpObserver
 import ir.srp.webrtc.data_converters.JsonConverter.convertJsonStringToObject
+import ir.srp.webrtc.models.P2PConnectionState
 import okio.IOException
 import org.webrtc.DataChannel
 import org.webrtc.DefaultVideoDecoderFactory
@@ -172,7 +173,7 @@ class P2PChannel private constructor(
             onProvideDataChannel = { dataChannel ->
                 this.dataChannel = dataChannel
                 doHandshake = true
-                eventsListener?.onCreateP2PChannel()
+                eventsListener?.onCreateP2PConnection()
                 isChannelReady = true
             },
             onProvideIceCandidate = { iceCandidate ->
@@ -184,6 +185,11 @@ class P2PChannel private constructor(
                         data = iceCandidate
                     )
                 )
+            },
+            onConnectionStateChange = { state ->
+                eventsListener?.onP2PConnectionStateChange(state)
+                if (state == P2PConnectionState.DISCONNECTED.name)
+                    eventsListener?.onDestroyP2PConnection()
             }
         )
         initializePeerConnectionFactory()

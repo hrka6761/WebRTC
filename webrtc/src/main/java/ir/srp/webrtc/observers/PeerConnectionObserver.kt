@@ -8,15 +8,16 @@ import org.webrtc.RtpReceiver
 
 class PeerConnectionObserver(
     private val onProvideDataChannel: (dataChannel: DataChannel?) -> Unit,
-    private val onProvideIceCandidate: (iceCandidate: IceCandidate?) -> Unit
+    private val onProvideIceCandidate: (iceCandidate: IceCandidate?) -> Unit,
+    private val onConnectionStateChange: (state: String) -> Unit
 ) : PeerConnection.Observer {
 
     override fun onSignalingChange(p0: PeerConnection.SignalingState?) {
         // Not yet implemented
     }
 
-    override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {
-        // Not yet implemented
+    override fun onIceConnectionChange(state: PeerConnection.IceConnectionState?) {
+        state?.let { onConnectionStateChange(state.name)}
     }
 
     override fun onIceConnectionReceivingChange(p0: Boolean) {

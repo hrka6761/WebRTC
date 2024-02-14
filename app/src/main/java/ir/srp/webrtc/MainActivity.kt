@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        override fun onCreateP2PChannel() {
+        override fun onCreateP2PConnection() {
             CoroutineScope(Dispatchers.Main).launch {
                 isP2PConnectionCreated = true
                 setButtonBackgroundColor(binding.webrtcConnectionBtn, R.color.green)
@@ -184,6 +184,26 @@ class MainActivity : AppCompatActivity() {
                 binding.messageEdt.isEnabled = true
                 binding.sendMessageBtn.isEnabled = true
             }
+        }
+
+        override fun onDestroyP2PConnection() {
+            CoroutineScope(Dispatchers.Main).launch {
+                isP2PConnectionCreated = false
+                setButtonBackgroundColor(binding.webrtcConnectionBtn, R.color.red)
+                if (signalingServerConnection == null) {
+                    binding.usernameEdtl.isEnabled = true
+                    binding.signInBtn.isEnabled = true
+                } else {
+                    binding.targetUsernameEdtl.isEnabled = true
+                    binding.handshakeBtn.isEnabled = true
+                }
+                binding.messageEdt.isEnabled = false
+                binding.sendMessageBtn.isEnabled = false
+            }
+        }
+
+        override fun onP2PConnectionStateChange(state: String) {
+            Log.i(TAG, "state  -----------------> : $state")
         }
 
         override fun onReceiveSignalingData(data: DataModel) {
