@@ -15,6 +15,7 @@ import ir.srp.webrtc.observers.PeerConnectionObserver
 import ir.srp.webrtc.observers.CallSdpObserver
 import ir.srp.webrtc.observers.PeerSdpObserver
 import ir.srp.webrtc.data_converters.JsonConverter.convertJsonStringToObject
+import ir.srp.webrtc.data_converters.JsonConverter.convertObjectToJsonString
 import ir.srp.webrtc.models.P2PConnectionState
 import okio.IOException
 import org.webrtc.DataChannel
@@ -179,10 +180,10 @@ class P2PChannel private constructor(
             onProvideIceCandidate = { iceCandidate ->
                 signalingServerConnection.sendData(
                     DataModel(
-                        type = DataType.IceCandidates,
+                        type = DataType.Ice,
                         username = username,
                         target = target,
-                        data = iceCandidate
+                        data = iceCandidate?.let { convertObjectToJsonString(it) }
                     )
                 )
             },
@@ -241,12 +242,12 @@ class P2PChannel private constructor(
 
     private fun processReceivedSignalingMessage(message: DataModel) {
         when (message.type) {
-            DataType.StartConnection -> {
+            DataType.Handshake -> {
                 this.target = message.username
                 call(target = message.username)
             }
 
-            DataType.Offer -> {
+            DataType.Call -> {
                 setPeerSdp(
                     SessionDescription(
                         SessionDescription.Type.OFFER,
@@ -266,7 +267,7 @@ class P2PChannel private constructor(
                 )
             }
 
-            DataType.IceCandidates -> {
+            DataType.Ice -> {
                 val iceCandidate = convertJsonStringToObject(
                     message.data.toString(),
                     IceCandidate::class.java
@@ -312,7 +313,7 @@ class P2PChannel private constructor(
 
         signalingServerConnection.sendData(
             DataModel(
-                type = DataType.StartConnection,
+                type = DataType.Handshake,
                 username = username,
                 target = target,
                 data = null

@@ -25,7 +25,7 @@ class CallSdpObserver(
     override fun onSetSuccess() {
         signalingServerConnection.sendData(
             DataModel(
-                type = DataType.Offer,
+                type = DataType.Call,
                 username = origin,
                 target = destination,
                 data = _sd?.description

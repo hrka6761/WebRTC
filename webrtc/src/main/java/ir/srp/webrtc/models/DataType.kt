@@ -2,8 +2,10 @@ package ir.srp.webrtc.models
 
 enum class DataType {
     SignIn,
-    StartConnection,
-    Offer,
+    Handshake,
+    Call,
     Answer,
-    IceCandidates
+    Ice,
+    SignOut,
+    Failed
 }
