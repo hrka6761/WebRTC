@@ -17,6 +17,9 @@ import ir.srp.webrtc.observers.PeerSdpObserver
 import ir.srp.webrtc.data_converters.JsonConverter.convertJsonStringToObject
 import ir.srp.webrtc.data_converters.JsonConverter.convertObjectToJsonString
 import ir.srp.webrtc.models.P2PConnectionState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okio.IOException
 import org.webrtc.DataChannel
 import org.webrtc.DefaultVideoDecoderFactory
@@ -309,25 +312,29 @@ class P2PChannel private constructor(
 
 
     fun handshake(target: String) {
-        this.target = target
+        CoroutineScope(Dispatchers.IO).launch {
+            this@P2PChannel.target = target
 
-        signalingServerConnection.sendData(
-            DataModel(
-                type = DataType.Handshake,
-                username = username,
-                target = target,
-                data = null
+            signalingServerConnection.sendData(
+                DataModel(
+                    type = DataType.Handshake,
+                    username = username,
+                    target = target,
+                    data = null
+                )
             )
-        )
 
-        doHandshake = true
+            doHandshake = true
+        }
     }
 
     @Throws(IOException::class)
     fun sendData(channelData: ChannelData) {
         if (doHandshake)
-            for (data in channelData())
-                dataChannel?.send(data)
+            CoroutineScope(Dispatchers.IO).launch {
+                for (data in channelData())
+                    dataChannel?.send(data)
+            }
         else
             throw NoHandShakeException()
     }

@@ -1,5 +1,8 @@
 package ir.srp.webrtc.observers
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 import org.webrtc.IceCandidate
 import org.webrtc.MediaStream
@@ -17,7 +20,9 @@ class PeerConnectionObserver(
     }
 
     override fun onIceConnectionChange(state: PeerConnection.IceConnectionState?) {
-        state?.let { onConnectionStateChange(state.name)}
+        CoroutineScope(Dispatchers.Main).launch {
+            state?.let { onConnectionStateChange(state.name) }
+        }
     }
 
     override fun onIceConnectionReceivingChange(p0: Boolean) {
@@ -29,7 +34,9 @@ class PeerConnectionObserver(
     }
 
     override fun onIceCandidate(iceCandidate: IceCandidate?) {
-        onProvideIceCandidate(iceCandidate)
+        CoroutineScope(Dispatchers.Main).launch {
+            onProvideIceCandidate(iceCandidate)
+        }
     }
 
     override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {
@@ -45,7 +52,9 @@ class PeerConnectionObserver(
     }
 
     override fun onDataChannel(dataChannel: DataChannel?) {
-        onProvideDataChannel(dataChannel)
+        CoroutineScope(Dispatchers.Main).launch {
+            onProvideDataChannel(dataChannel)
+        }
     }
 
     override fun onRenegotiationNeeded() {

@@ -2,6 +2,9 @@ package ir.srp.webrtc.webSocket
 
 import ir.srp.webrtc.models.DataModel
 import ir.srp.webrtc.data_converters.JsonConverter.convertJsonStringToObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
@@ -17,35 +20,45 @@ class WebSocketListener(
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
 
-        onOpenCallback(response)
+        CoroutineScope(Dispatchers.Main).launch {
+            onOpenCallback(response)
+        }
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosed(webSocket, code, reason)
 
-        onClosedCallback(code, reason)
+        CoroutineScope(Dispatchers.Main).launch {
+            onClosedCallback(code, reason)
+        }
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosing(webSocket, code, reason)
 
-        onClosingCallback(code, reason)
+        CoroutineScope(Dispatchers.Main).launch {
+            onClosingCallback(code, reason)
+        }
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
 
-        onFailureCallback(t, response)
+        CoroutineScope(Dispatchers.Main).launch {
+            onFailureCallback(t, response)
+        }
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
 
-        onMessageCallback(
-            convertJsonStringToObject(
-                text,
-                DataModel::class.java
-            ) as DataModel
-        )
+        CoroutineScope(Dispatchers.Main).launch {
+            onMessageCallback(
+                convertJsonStringToObject(
+                    text,
+                    DataModel::class.java
+                ) as DataModel
+            )
+        }
     }
 }

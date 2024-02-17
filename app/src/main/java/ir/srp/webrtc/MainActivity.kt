@@ -13,9 +13,6 @@ import ir.srp.webrtc.models.DataModel
 import ir.srp.webrtc.models.IceServerModel
 import ir.srp.webrtc.utils.IceServerBuilder.createListOfIceServers
 import ir.srp.webrtc.webSocket.WebSocketClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -88,6 +85,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createP2PChannelBuilder(username: String): P2PChannel.Companion.Builder {
+
         return P2PChannel.Companion.Builder(
             application,
             SIGNALING_SERVER_URL,
@@ -134,72 +132,63 @@ class MainActivity : AppCompatActivity() {
 
     private inner class ChannelEventListener : ChannelEventsListener {
         override fun onSuccessSignalingServerConnection(webSocket: WebSocketClient) {
-            CoroutineScope(Dispatchers.Main).launch {
-                signalingServerConnection = webSocket
-                setButtonBackgroundColor(binding.signalingServerConnectionBtn, R.color.green)
-                binding.targetUsernameEdtl.isEnabled = true
-                binding.handshakeBtn.isEnabled = true
-            }
+            signalingServerConnection = webSocket
+            setButtonBackgroundColor(binding.signalingServerConnectionBtn, R.color.green)
+            binding.targetUsernameEdtl.isEnabled = true
+            binding.handshakeBtn.isEnabled = true
         }
 
         override fun onFailedSignalingServerConnection(t: Throwable) {
-            CoroutineScope(Dispatchers.Main).launch {
-                setButtonBackgroundColor(binding.signalingServerConnectionBtn, R.color.red)
-                if (!isP2PConnectionCreated) {
-                    binding.usernameEdtl.isEnabled = true
-                    binding.signInBtn.isEnabled = true
-                }
-                binding.targetUsernameEdtl.isEnabled = false
-                binding.handshakeBtn.isEnabled = false
-                warning(t.message.toString())
-                signalingServerConnection = null
+            setButtonBackgroundColor(binding.signalingServerConnectionBtn, R.color.red)
+            if (!isP2PConnectionCreated) {
+                binding.usernameEdtl.isEnabled = true
+                binding.signInBtn.isEnabled = true
             }
+            binding.targetUsernameEdtl.isEnabled = false
+            binding.handshakeBtn.isEnabled = false
+            warning(t.message.toString())
+            signalingServerConnection = null
+
         }
 
         override fun onCLoseSignalingServerConnection(code: Int, reason: String) {
-            CoroutineScope(Dispatchers.Main).launch {
-                setButtonBackgroundColor(binding.signalingServerConnectionBtn, R.color.red)
-                if (!isP2PConnectionCreated) {
-                    binding.usernameEdtl.isEnabled = true
-                    binding.signInBtn.isEnabled = true
-                }
-                binding.targetUsernameEdtl.isEnabled = false
-                binding.handshakeBtn.isEnabled = false
-
-                if (reason.isNotEmpty())
-                    warning(reason)
-                else
-                    warning("You disconnect from signaling server.")
-
-                signalingServerConnection = null
+            setButtonBackgroundColor(binding.signalingServerConnectionBtn, R.color.red)
+            if (!isP2PConnectionCreated) {
+                binding.usernameEdtl.isEnabled = true
+                binding.signInBtn.isEnabled = true
             }
+            binding.targetUsernameEdtl.isEnabled = false
+            binding.handshakeBtn.isEnabled = false
+
+            if (reason.isNotEmpty())
+                warning(reason)
+            else
+                warning("You disconnect from signaling server.")
+
+            signalingServerConnection = null
         }
 
         override fun onCreateP2PConnection() {
-            CoroutineScope(Dispatchers.Main).launch {
-                isP2PConnectionCreated = true
-                setButtonBackgroundColor(binding.webrtcConnectionBtn, R.color.green)
-                binding.handshakeBtn.isEnabled = false
-                binding.targetUsernameEdtl.isEnabled = false
-                binding.messageEdt.isEnabled = true
-                binding.sendMessageBtn.isEnabled = true
-            }
+            isP2PConnectionCreated = true
+            setButtonBackgroundColor(binding.webrtcConnectionBtn, R.color.green)
+            binding.handshakeBtn.isEnabled = false
+            binding.targetUsernameEdtl.isEnabled = false
+            binding.messageEdt.isEnabled = true
+            binding.sendMessageBtn.isEnabled = true
         }
 
         override fun onDestroyP2PConnection() {
-            CoroutineScope(Dispatchers.Main).launch {
-                isP2PConnectionCreated = false
-                setButtonBackgroundColor(binding.webrtcConnectionBtn, R.color.red)
-                if (signalingServerConnection == null) {
-                    binding.usernameEdtl.isEnabled = true
-                    binding.signInBtn.isEnabled = true
-                } else {
-                    binding.targetUsernameEdtl.isEnabled = true
-                    binding.handshakeBtn.isEnabled = true
-                }
-                binding.messageEdt.isEnabled = false
-                binding.sendMessageBtn.isEnabled = false
+            isP2PConnectionCreated = false
+            setButtonBackgroundColor(binding.webrtcConnectionBtn, R.color.red)
+            if (signalingServerConnection == null) {
+                binding.usernameEdtl.isEnabled = true
+                binding.signInBtn.isEnabled = true
+            } else {
+                binding.targetUsernameEdtl.isEnabled = true
+                binding.handshakeBtn.isEnabled = true
             }
+            binding.messageEdt.isEnabled = false
+            binding.sendMessageBtn.isEnabled = false
         }
 
         override fun onP2PConnectionStateChange(state: String) {
@@ -211,10 +200,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onReceiveChannelTextData(text: String?) {
-            CoroutineScope(Dispatchers.Main).launch {
-                receivedMessage.append("$text\n")
-                binding.messageContainerTxt.text = receivedMessage.toString()
-            }
+            receivedMessage.append("$text\n")
+            binding.messageContainerTxt.text = receivedMessage.toString()
         }
 
         override fun onReceiveChannelFileData(byteArray: ByteArray?) {
