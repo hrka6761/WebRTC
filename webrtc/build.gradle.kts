@@ -49,4 +49,8 @@ dependencies {
     // Gson
     val gson_version = "2.10.1"
     implementation("com.google.code.gson:gson:$gson_version")
+
+    // Coroutines
+    val coroutines_version = "1.7.3"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version")
 }
