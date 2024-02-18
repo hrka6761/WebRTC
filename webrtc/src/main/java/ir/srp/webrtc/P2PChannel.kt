@@ -16,6 +16,7 @@ import ir.srp.webrtc.observers.CallSdpObserver
 import ir.srp.webrtc.observers.PeerSdpObserver
 import ir.srp.webrtc.data_converters.JsonConverter.convertJsonStringToObject
 import ir.srp.webrtc.data_converters.JsonConverter.convertObjectToJsonString
+import ir.srp.webrtc.exceptions.NoSignallingConnectionException
 import ir.srp.webrtc.models.P2PConnectionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +42,7 @@ class P2PChannel private constructor(
     private var videoDecoderFactory: VideoDecoderFactory,
     private var iceServers: List<IceServer>,
     private var mediaConstraints: MediaConstraints,
+    private val signalingServerUrl: String,
     private var username: String,
     private var eventsListener: ChannelEventsListener?,
 ) {
@@ -56,11 +58,13 @@ class P2PChannel private constructor(
     private lateinit var signalingServerListener: WebSocketListener
     private var dataChannel: DataChannel? = null
     private var target: String? = null
+    private var isSignallingConnected = false
     private var doHandshake: Boolean = false
     private var isChannelReady: Boolean = false
 
 
     companion object {
+
         class Builder(
             private val context: Application,
             private val signalingServerUrl: String,
@@ -68,12 +72,14 @@ class P2PChannel private constructor(
             private val iceServers: List<IceServer>,
         ) {
 
+            private lateinit var p2PChannel: P2PChannel
             private var mOptions = getDefaultInitializationOptions()
             private val eglBaseContext = EglBase.create().eglBaseContext
             private var mVideoEncoderFactory = getDefaultVideoEncoderFactory()
             private var mVideoDecoderFactory = getDefaultVideoDecoderFactory()
             private var mMediaConstraints = getDefaultMediaConstraints()
             private var mEventsListener: ChannelEventsListener? = null
+            private var isPeerConnectionFactoryInit = false
 
 
             private fun getDefaultInitializationOptions() = PeerConnectionFactory
@@ -127,49 +133,30 @@ class P2PChannel private constructor(
             }
 
             fun build(): P2PChannel {
-                val p2pChannel = P2PChannel(
+                p2PChannel = P2PChannel(
                     mOptions,
                     mVideoEncoderFactory,
                     mVideoDecoderFactory,
                     iceServers,
                     mMediaConstraints,
+                    signalingServerUrl,
                     username,
                     mEventsListener
                 )
 
-                p2pChannel.createSignalingServerConnection(signalingServerUrl)
+                if (!isPeerConnectionFactoryInit) {
+                    p2PChannel.initializePeerConnectionFactory()
+                    isPeerConnectionFactoryInit = true
+                }
 
-                return p2pChannel
+                return p2PChannel
             }
         }
     }
 
 
-    @Throws(IllegalArgumentException::class)
-    private fun createSignalingServerConnection(signalingServerUrl: String) {
-        if (!isValidSignalingServerUrl(signalingServerUrl))
-            throw IllegalUrlException()
-
-        signalingServerListener = WebSocketListener(
-            onOpenCallback = { response ->
-                initializePeerConnection()
-                initializePeerOnSignalingServer()
-                eventsListener?.onSuccessSignalingServerConnection(signalingServerConnection)
-            },
-            onClosedCallback = { code, reason ->
-                eventsListener?.onCLoseSignalingServerConnection(code, reason)
-            },
-            onClosingCallback = { code, reason -> },
-            onFailureCallback = { throwable, response ->
-                eventsListener?.onFailedSignalingServerConnection(throwable)
-            },
-            onMessageCallback = { message ->
-                eventsListener?.onReceiveSignalingData(message)
-                processReceivedSignalingMessage(message)
-            }
-        )
-        signalingServerConnection = WebSocketClient(signalingServerUrl, signalingServerListener)
-        signalingServerConnection.createConnection()
+    private fun initializePeerConnectionFactory() {
+        PeerConnectionFactory.initialize(options)
     }
 
     private fun initializePeerConnection() {
@@ -192,11 +179,10 @@ class P2PChannel private constructor(
             },
             onConnectionStateChange = { state ->
                 eventsListener?.onP2PConnectionStateChange(state)
-                if (state == P2PConnectionState.DISCONNECTED.name)
+                if (state == P2PConnectionState.DISCONNECTED.name || state == P2PConnectionState.CLOSED.name)
                     eventsListener?.onDestroyP2PConnection()
             }
         )
-        initializePeerConnectionFactory()
         createPeerConnectionFactory()
         createPeerConnection()
         createDataChannel()
@@ -211,10 +197,6 @@ class P2PChannel private constructor(
                 data = null
             )
         )
-    }
-
-    private fun initializePeerConnectionFactory() {
-        PeerConnectionFactory.initialize(options)
     }
 
     private fun createPeerConnectionFactory() {
@@ -311,20 +293,51 @@ class P2PChannel private constructor(
     }
 
 
+    @Throws(IllegalArgumentException::class)
+    fun createSignalingConnection() {
+        if (!isValidSignalingServerUrl(signalingServerUrl))
+            throw IllegalUrlException()
+
+        signalingServerListener = WebSocketListener(
+            onOpenCallback = { response ->
+                isSignallingConnected = true
+                initializePeerConnection()
+                initializePeerOnSignalingServer()
+                eventsListener?.onSuccessSignalingServerConnection(signalingServerConnection)
+            },
+            onClosedCallback = { code, reason ->
+                eventsListener?.onCLoseSignalingServerConnection(code, reason)
+            },
+            onClosingCallback = { code, reason -> },
+            onFailureCallback = { throwable, response ->
+                eventsListener?.onFailedSignalingServerConnection(throwable)
+            },
+            onMessageCallback = { message ->
+                eventsListener?.onReceiveSignalingData(message)
+                processReceivedSignalingMessage(message)
+            }
+        )
+        signalingServerConnection = WebSocketClient(signalingServerUrl, signalingServerListener)
+        signalingServerConnection.createConnection()
+    }
+
     fun handshake(target: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            this@P2PChannel.target = target
+            if (isSignallingConnected) {
+                this@P2PChannel.target = target
 
-            signalingServerConnection.sendData(
-                DataModel(
-                    type = DataType.Handshake,
-                    username = username,
-                    target = target,
-                    data = null
+                signalingServerConnection.sendData(
+                    DataModel(
+                        type = DataType.Handshake,
+                        username = username,
+                        target = target,
+                        data = null
+                    )
                 )
-            )
 
-            doHandshake = true
+                doHandshake = true
+            } else
+                throw NoSignallingConnectionException()
         }
     }
 

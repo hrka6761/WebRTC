@@ -5,9 +5,6 @@ import ir.srp.webrtc.data_converters.ChannelDataConverter.convertChannelDataToMe
 import ir.srp.webrtc.data_converters.ChannelDataConverter.convertChannelDataToFile
 import ir.srp.webrtc.data_converters.ChannelDataConverter.convertChannelDataToText
 import ir.srp.webrtc.models.ChannelDataType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.webrtc.DataChannel
 
 class DataChannelObserver(
@@ -26,19 +23,17 @@ class DataChannelObserver(
     }
 
     override fun onMessage(buffer: DataChannel.Buffer?) {
-        CoroutineScope(Dispatchers.Main).launch {
-            if (receivedDataType == null)
-                receivedDataType = buffer?.let { convertChannelDataToMetaData(it) }
-            else {
-                if (receivedDataType == ChannelDataType.Text.name) {
-                    val data = buffer?.let { convertChannelDataToText(it) }
-                    eventsListener?.onReceiveChannelTextData(data)
-                } else {
-                    val data = buffer?.let { convertChannelDataToFile(it) }
-                    eventsListener?.onReceiveChannelFileData(data)
-                }
-                receivedDataType = null
+        if (receivedDataType == null)
+            receivedDataType = buffer?.let { convertChannelDataToMetaData(it) }
+        else {
+            if (receivedDataType == ChannelDataType.Text.name) {
+                val data = buffer?.let { convertChannelDataToText(it) }
+                eventsListener?.onReceiveChannelTextData(data)
+            } else {
+                val data = buffer?.let { convertChannelDataToFile(it) }
+                eventsListener?.onReceiveChannelFileData(data)
             }
+            receivedDataType = null
         }
     }
 }

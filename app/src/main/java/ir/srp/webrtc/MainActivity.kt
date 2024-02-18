@@ -13,15 +13,20 @@ import ir.srp.webrtc.models.DataModel
 import ir.srp.webrtc.models.IceServerModel
 import ir.srp.webrtc.utils.IceServerBuilder.createListOfIceServers
 import ir.srp.webrtc.webSocket.WebSocketClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private val TAG = "HAMIDREZA"
     private val SIGNALING_SERVER_URL = "ws://192.168.54.187:3000"
     private lateinit var binding: ActivityMainBinding
+    private lateinit var channelBuilder: P2PChannel.Companion.Builder
     private lateinit var p2PChannel: P2PChannel
     private val receivedMessage = StringBuffer("")
     private var signalingServerConnection: WebSocketClient? = null
+    private var isBuiltChannel = false
     private var isP2PConnectionCreated = false
 
 
@@ -35,9 +40,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun initialize() {
         initSignalingServerConnectionButton()
+        initP2PConnectionButton()
         initSignInButton()
         initHandShakeButton()
         initSendMessageButton()
+    }
+
+    private fun initP2PConnectionButton() {
+        binding.webrtcConnectionBtn.setOnClickListener {
+            if (isP2PConnectionCreated)
+                displayDialog(
+                    "P2P connection",
+                    "Are you sure you want to disconnect from the peer ?",
+                    {
+                        p2PChannel.closeChannel()
+                    },
+                    {}
+                )
+        }
     }
 
     private fun initSignalingServerConnectionButton() {
@@ -58,7 +78,12 @@ class MainActivity : AppCompatActivity() {
             if (username.isNotEmpty()) {
                 binding.usernameEdtl.isEnabled = false
                 binding.signInBtn.isEnabled = false
-                p2PChannel = createP2PChannelBuilder(username).build()
+                if (!isBuiltChannel) {
+                    initP2PChannelBuilder(username)
+                    isBuiltChannel = true
+                }
+                p2PChannel = channelBuilder.build()
+                p2PChannel.createSignalingConnection()
             } else
                 warning("Please enter a username")
         }
@@ -84,9 +109,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createP2PChannelBuilder(username: String): P2PChannel.Companion.Builder {
-
-        return P2PChannel.Companion.Builder(
+    private fun initP2PChannelBuilder(username: String) {
+        channelBuilder = P2PChannel.Companion.Builder(
             application,
             SIGNALING_SERVER_URL,
             username,
@@ -175,6 +199,8 @@ class MainActivity : AppCompatActivity() {
             binding.targetUsernameEdtl.isEnabled = false
             binding.messageEdt.isEnabled = true
             binding.sendMessageBtn.isEnabled = true
+
+            signalingServerConnection?.removeConnection()
         }
 
         override fun onDestroyP2PConnection() {
@@ -200,8 +226,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onReceiveChannelTextData(text: String?) {
-            receivedMessage.append("$text\n")
-            binding.messageContainerTxt.text = receivedMessage.toString()
+            CoroutineScope(Dispatchers.Main).launch {
+                receivedMessage.append("$text\n")
+                binding.messageContainerTxt.text = receivedMessage.toString()
+            }
         }
 
         override fun onReceiveChannelFileData(byteArray: ByteArray?) {
