@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private val TAG = "HAMIDREZA"
-    private val SIGNALING_SERVER_URL = "ws://192.168.54.187:3000"
+    private val SIGNALING_SERVER_URL = "ws://srp-rasad.ir:13676"
     private lateinit var binding: ActivityMainBinding
     private lateinit var channelBuilder: P2PChannel.Companion.Builder
     private lateinit var p2PChannel: P2PChannel
@@ -116,10 +116,17 @@ class MainActivity : AppCompatActivity() {
             username,
             createListOfIceServers(
                 IceServerModel(
-                    "turn:openrelay.metered.ca:443?transport=tcp",
+                    "turn:openrelay.metered.ca:80",
                     "openrelayproject",
                     "openrelayproject"
-                )
+                ),
+                IceServerModel("stun:stun.l.google.com:19302"),
+                IceServerModel("stun:stun.avigora.com:3478"),
+                IceServerModel("stun:stun.actionvoip.com:3478"),
+                IceServerModel("stun:stun.2talk.co.nz:3478"),
+                IceServerModel("stun:iphone-stun.strato-iphone.de:3478"),
+                IceServerModel("stun:s1.taraba.net:3478"),
+                IceServerModel("stun:stun.12connect.com:3478"),
             )
         ).setEventsListener(ChannelEventListener())
     }

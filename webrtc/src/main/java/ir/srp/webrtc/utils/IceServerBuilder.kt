@@ -8,13 +8,17 @@ object IceServerBuilder {
     fun createListOfIceServers(vararg iceServerModels: IceServerModel): List<IceServer> {
         val iceServers = mutableListOf<IceServer>()
 
-        for (iceServerModel in iceServerModels)
-            iceServers.add(
-                IceServer.builder(iceServerModel.uri)
-                    .setUsername(iceServerModel.username)
-                    .setPassword(iceServerModel.password)
-                    .createIceServer()
-            )
+        for (iceServerModel in iceServerModels) {
+            if (iceServerModel.username == null) {
+                iceServers.add(IceServer.builder(iceServerModel.uri).createIceServer())
+            } else
+                iceServers.add(
+                    IceServer.builder(iceServerModel.uri)
+                        .setUsername(iceServerModel.username)
+                        .setPassword(iceServerModel.password)
+                        .createIceServer()
+                )
+        }
 
         return iceServers
     }
