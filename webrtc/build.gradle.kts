@@ -40,18 +40,14 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
 
     // WebRTC
-    val webrtc_version = "1.0.23995"
-    implementation("org.webrtc:google-webrtc:$webrtc_version")
+    implementation("org.webrtc:google-webrtc:1.0.23995")
 
     // okhttp3
-    val okhttp3_version = "4.12.0"
-    implementation("com.squareup.okhttp3:okhttp:$okhttp3_version")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Gson
-    val gson_version = "2.10.1"
-    implementation("com.google.code.gson:gson:$gson_version")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Coroutines
-    val coroutines_version = "1.7.3"
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }

@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private val TAG = "HAMIDREZA"
-    private val SIGNALING_SERVER_URL = "ws://srp-rasad.ir:13676"
+    private val SIGNALING_SERVER_URL = "ws://srp-rasad.ir:30020"
     private lateinit var binding: ActivityMainBinding
     private lateinit var channelBuilder: P2PChannel.Companion.Builder
     private lateinit var p2PChannel: P2PChannel
