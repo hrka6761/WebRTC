@@ -40,7 +40,7 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
 
     // WebRTC
-    implementation("org.webrtc:google-webrtc:1.0.23995")
+    implementation("com.mesibo.api:webrtc:1.0.5")
 
     // okhttp3
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
